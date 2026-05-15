@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Docker Compose for the Yocto CM4 build environment
+#
+# Typical workflow:
+#   1. docker compose build
+#   2. docker compose run --rm yocto-builder /opt/yocto/scripts/setup.sh
+#   3. docker compose run --rm -it yocto-builder
+#      (inside container) source poky/oe-init-build-env build
+#      (inside container) bitbake core-image-base
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  yocto-builder:
+    build:
+      context: .
+      args:
+        # Passes the current host user's UID/GID into the image build so that
+        # files written to the bind-mounted volumes are owned correctly.
+        # These fall back to 1000:1000 if the .env file is absent.
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+
+    image: yocto-scarthgap-cm4:latest
+    container_name: yocto-cm4-builder
+    hostname: yocto-builder
+
+    volumes:
+      # Yocto workspace: poky, meta-*, and the build/ directory live here.
+      - ./workspace:/workspace
+
+      # Download cache (DL_DIR). Survives rebuilds; shared across Yocto projects.
+      # For large teams, point this at a NFS share or a named Docker volume.
+      - ./downloads:/downloads
+
+      # Shared state cache (SSTATE_DIR). The single biggest speedup for
+      # incremental builds — do not delete this between runs.
+      - ./sstate-cache:/sstate-cache
+
+      # Source mirror (SOURCE_MIRROR_URL). BitBake checks here before fetching
+      # from the internet. Populate it by copying DL_DIR contents after a build,
+      # or point this at a shared NFS path to serve an entire team.
+      - ./mirror:/mirror
+
+    environment:
+      - TERM=xterm-256color
+      # HOME must be explicit inside the container so that git/ssh config
+      # is read from the right place.
+      - HOME=/home/yocto
+
+    # Keep stdin open and allocate a pseudo-TTY so you get an interactive
+    # shell when running: docker compose run --rm -it yocto-builder
+    stdin_open: true
+    tty: true
+
+    working_dir: /workspace
+
+    # NET_ADMIN is required for tc and wondershaper to shape network traffic.
+    # Without it, those commands fail with "Operation not permitted" even as root.
+    cap_add:
+      - NET_ADMIN
+
+    # Yocto opens thousands of files during a build.
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    # Some build steps (e.g. kernel make) use /dev/shm for temp buffers.
+    shm_size: "4gb"
