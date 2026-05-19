@@ -16,6 +16,9 @@ set -euo pipefail
 # All layers are cloned into the bind-mounted /workspace volume so that they
 # persist on the host between container invocations.
 WORKSPACE="/workspace"
+BUILD_DIR="${WORKSPACE}/build"
+CONF_DIR="${BUILD_DIR}/conf"
+METALAYER_DIR="${BUILD_DIR}/meta-layers"
 
 # Yocto Scarthgap branch name — must be identical across all layers.
 BRANCH="scarthgap"
@@ -29,6 +32,7 @@ clone_if_missing() {
     local dest="$2"
     local branch="$3"
 
+    pushd "$METALAYER_DIR" &> /dev/null
     if [ -d "${dest}/.git" ]; then
         echo "  ✓  $(basename "${dest}") already present — skipping"
     else
@@ -37,6 +41,7 @@ clone_if_missing() {
         # Remove --depth 1 if you need full git history or plan to contribute upstream.
         git clone --branch "${branch}" --depth 1 "${url}" "${dest}"
     fi
+    popd &> /dev/null
 }
 
 # ─── Clone layers ─────────────────────────────────────────────────────────────
@@ -44,6 +49,7 @@ echo ""
 echo "═══ Cloning Yocto layers (Scarthgap) ════════════════════════════"
 echo ""
 
+mkdir -p "${METALAYER_DIR}"
 cd "${WORKSPACE}"
 
 # Poky: the Yocto reference distribution; includes BitBake and OE-Core.
@@ -71,9 +77,6 @@ echo ""
 echo "═══ Initialising build directory ════════════════════════════════"
 echo ""
 
-BUILD_DIR="${WORKSPACE}/build"
-CONF_DIR="${BUILD_DIR}/conf"
-
 # Create the conf directory that Yocto expects before oe-init-build-env.
 # When oe-init-build-env is sourced later it will see existing conf files
 # and will NOT overwrite them with defaults.
@@ -86,21 +89,25 @@ cp "${CONF_SRC}/local.conf" "${CONF_DIR}/local.conf"
 echo "  →  Installing bblayers.conf …"
 cp "${CONF_SRC}/bblayers.conf" "${CONF_DIR}/bblayers.conf"
 
-# ─── Done ─────────────────────────────────────────────────────────────────────
-echo ""
-echo "═══ Setup complete ══════════════════════════════════════════════"
-echo ""
-echo "Next steps:"
-echo ""
-echo "  1. Enter the container:"
-echo "       docker compose run --rm -it yocto-builder"
-echo ""
-echo "  2. Initialise the build environment (sets PATH for BitBake):"
-echo "       source poky/oe-init-build-env build"
-echo ""
-echo "  3. Start the build (~1–3 hours on first run):"
-echo "       bitbake core-image-base"
-echo ""
-echo "  Output image will be at:"
-echo "    workspace/build/tmp/deploy/images/raspberrypi-cm4/"
-echo ""
+# ─── Enter build shell ────────────────────────────────────────────────────────
+
+source poky/oe-init-build-env build
+bash
+
+#echo ""
+#echo "═══ Setup complete ══════════════════════════════════════════════"
+#echo ""
+#echo "Next steps:"
+#echo ""
+#echo "  1. Enter the container:"
+#echo "       docker compose run --rm -it yocto-builder"
+#echo ""
+#echo "  2. Initialise the build environment (sets PATH for BitBake):"
+#echo "       source poky/oe-init-build-env build"
+#echo ""
+#echo "  3. Start the build (~1–3 hours on first run):"
+#echo "       bitbake core-image-base"
+#echo ""
+#echo "  Output image will be at:"
+#echo "    workspace/build/tmp/deploy/images/raspberrypi-cm4/"
+#echo ""

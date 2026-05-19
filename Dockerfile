@@ -74,11 +74,13 @@ RUN groupadd -g "${HOST_GID}" yocto \
 RUN mkdir -p /workspace /downloads /sstate-cache /mirror \
     && chown -R yocto:yocto /workspace /downloads /sstate-cache /mirror
 
-# ─── Embedded scripts and config templates ───────────────────────────────────
-# These are baked into the image so no extra mounts are needed at runtime.
+## ─── Embedded scripts and config templates ───────────────────────────────────
+## These are baked into the image so no extra mounts are needed at runtime.
 COPY --chown=yocto:yocto scripts/ /opt/yocto/scripts/
-COPY --chown=yocto:yocto conf/    /opt/yocto/conf/
+#COPY --chown=yocto:yocto conf/    /opt/yocto/conf/
 RUN chmod +x /opt/yocto/scripts/*.sh
+
+RUN echo "PS1='\[\e[32m\](container)\[\e[0m\][\u \w]\$ '" >> /home/yocto/.bashrc
 
 # ─── Switch to non-root user ─────────────────────────────────────────────────
 USER yocto

@@ -10,18 +10,19 @@ set -e
 echo "┌─────────────────────────────────────────────────────┐"
 echo "│  Yocto Scarthgap 5.0 LTS  ·  Raspberry Pi CM4       │"
 echo "└─────────────────────────────────────────────────────┘"
-echo ""
 
-if [ -d /workspace/poky ]; then
-    echo "Workspace ready. To build:"
-    echo "  source poky/oe-init-build-env build"
-    echo "  bitbake core-image-base"
-else
-    echo "Workspace not initialised. Run the setup script first:"
-    echo "  docker compose run --rm yocto-builder /opt/yocto/scripts/setup.sh"
-fi
+#if [ -d /workspace/poky ]; then
+#    echo "Workspace ready. To build:"
+#    echo "  source poky/oe-init-build-env build"
+#    echo "  bitbake core-image-base"
+#else
+#    echo "Workspace not initialised. Run the setup script first:"
+#    echo "  docker compose run --rm yocto-builder /opt/yocto/scripts/setup.sh"
+#fi
+#
+#echo ""
 
-echo ""
+export PS1='\[\e[32m\](pod)\[\e[0m\][\u \w]\$'
 
 # Execute the CMD (or any arguments passed to docker run / compose run).
 exec "$@"

@@ -38,7 +38,10 @@ services:
       # Source mirror (SOURCE_MIRROR_URL). BitBake checks here before fetching
       # from the internet. Populate it by copying DL_DIR contents after a build,
       # or point this at a shared NFS path to serve an entire team.
-      - ./mirror:/mirror
+      - /data/source/yocto-download-cache:/mirror
+
+      # Mount conf so we can modify on the fly if needed
+      - ./conf/:/opt/yocto/conf/
 
     environment:
       - TERM=xterm-256color

@@ -1,8 +1,7 @@
 # Yocto build artifacts — these are large and should not be committed.
 # Keep the directories themselves (tracked via .gitkeep) so that docker
 # compose bind mounts have existing target paths on a fresh clone.
-workspace/*
-!workspace/.gitkeep
+workspace/build
 
 downloads/*
 !downloads/.gitkeep
