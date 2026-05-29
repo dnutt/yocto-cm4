@@ -129,7 +129,7 @@ EXTRA_IMAGE_FEATURES ?= ""
 The `sstate-cache/` directory is the biggest lever for build speed. Do not
 delete it between runs. If you have multiple Yocto projects on the same
 machine, point all of them at the same `SSTATE_DIR` to share cached
-artefacts across projects.
+artifacts across projects.
 
 ### eMMC vs SD card
 
